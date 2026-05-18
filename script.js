@@ -124,8 +124,7 @@ function updateWordCount() {
 
 function updateLoadStatus(successCount, totalCount, loadedNames) {
   if (successCount === 0) {
-    loadStatus.textContent = 'Failed to load abbreviation data. Check CSV files.';
-    loadStatus.style.background = '#fee2e2';
+    loadStatus.textContent = 'Failed to load abbreviation data. If you opened this file directly in the browser, run a local server or publish the site to enable CSV loading.';
     loadStatus.style.borderColor = '#fecaca';
     convertBtn.disabled = true;
     return;

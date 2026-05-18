@@ -15,7 +15,7 @@ A static text converter that uses a military abbreviation dictionary to convert 
 5. Use `Copy Result` to copy the output or `Clear` to reset.
 
 ## Local preview
-Run a local server to ensure the CSV loads correctly:
+Some browsers block `fetch()` for local files when you open `index.html` directly. To run the app correctly locally, use a simple local server:
 
 ```bash
 python3 -m http.server 8000
@@ -26,6 +26,8 @@ Then open:
 ```text
 http://localhost:8000
 ```
+
+This ensures the CSV data files load correctly before publishing.
 
 ## Deploy
 This is a static site, so you can deploy it with GitHub Pages, Netlify, or any static hosting provider.
