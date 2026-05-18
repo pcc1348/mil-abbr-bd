@@ -1,12 +1,17 @@
-const fileInput = document.getElementById('fileInput');
-const searchInput = document.getElementById('searchInput');
-const statusText = document.getElementById('statusText');
-const summaryText = document.getElementById('summaryText');
-const resultsHeader = document.getElementById('resultsHeader');
-const resultsBody = document.getElementById('resultsBody');
+const inputText = document.getElementById('inputText');
+const outputText = document.getElementById('outputText');
+const wordCount = document.getElementById('wordCount');
+const abbrCount = document.getElementById('abbrCount');
+const convertBtn = document.getElementById('convertBtn');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
 
-let abbreviations = [];
-let headers = [];
+let abbreviationMap = {};
+let phraseKeys = [];
+
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 function parseCsvLine(line) {
   const values = [];
@@ -34,126 +39,102 @@ function parseCsvLine(line) {
 
 function parseCsv(text) {
   const lines = text.replace(/\r\n/g, '\n').split('\n').filter(line => line.trim().length > 0);
-  if (!lines.length) return { headers: [], rows: [] };
+  if (!lines.length) return [];
 
-  const rawHeaders = parseCsvLine(lines[0]);
-  const parsedHeaders = rawHeaders.map(header => header.trim().replace(/^"|"$/g, ''));
+  const headerCells = parseCsvLine(lines[0]).map(cell => cell.trim().replace(/^"|"$/g, ''));
+  const abbreviationColumn = headerCells.findIndex(h => h.toLowerCase() === 'abbreviation');
+  const meaningColumn = headerCells.findIndex(h => h.toLowerCase() === 'meaning');
 
-  const rows = lines.slice(1).map(line => {
-    const values = parseCsvLine(line).map(value => value.trim().replace(/^"|"$/g, ''));
-    const row = {};
-    parsedHeaders.forEach((header, index) => {
-      row[header] = values[index] || '';
-    });
-    return row;
-  }).filter(row => Object.values(row).some(value => value.length > 0));
+  if (abbreviationColumn === -1 || meaningColumn === -1) {
+    return [];
+  }
 
-  return { headers: parsedHeaders, rows };
+  return lines.slice(1).map(line => {
+    const cells = parseCsvLine(line).map(cell => cell.trim().replace(/^"|"$/g, ''));
+    const abbreviation = cells[abbreviationColumn] || '';
+    const meaning = cells[meaningColumn] || '';
+    return { abbreviation, meaning };
+  }).filter(row => row.abbreviation && row.meaning);
 }
 
-function renderTableHeader() {
-  if (!headers.length) {
-    resultsHeader.innerHTML = '<th>Abbreviation</th><th>Meaning</th>';
+function loadAbbreviations(text) {
+  const rows = parseCsv(text);
+  abbreviationMap = {};
+  rows.forEach(row => {
+    const key = row.abbreviation.trim().toLowerCase();
+    if (key) {
+      abbreviationMap[key] = row.meaning.trim();
+    }
+  });
+  phraseKeys = Object.keys(abbreviationMap).sort((a, b) => b.length - a.length);
+}
+
+function countWords(text) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function convertText() {
+  const input = inputText.value;
+  if (!input.trim()) {
+    outputText.value = '';
+    abbrCount.textContent = '0';
     return;
   }
 
-  resultsHeader.innerHTML = headers.map(header => `<th>${header}</th>`).join('');
-}
+  let converted = input;
+  let abbreviationsUsed = 0;
 
-function renderResults(rows) {
-  if (!headers.length) {
-    renderTableHeader();
-  }
-
-  if (!rows.length) {
-    resultsBody.innerHTML = `<tr><td colspan="${headers.length || 2}">No matching abbreviations found.</td></tr>`;
-    return;
-  }
-
-  resultsBody.innerHTML = rows.map(row => {
-    return `
-      <tr>
-        ${headers.map(header => `<td data-label="${header}">${row[header] || ''}</td>`).join('')}
-      </tr>
-    `;
-  }).join('');
-}
-
-function updateSummary(count, query = '') {
-  if (!query) {
-    summaryText.textContent = `${count} rows loaded.`;
-    return;
-  }
-  summaryText.textContent = `${count} result${count === 1 ? '' : 's'} for "${query}".`;
-}
-
-function updateSearch() {
-  const query = searchInput.value.trim().toLowerCase();
-  if (!query) {
-    renderResults(abbreviations);
-    updateSummary(abbreviations.length);
-    statusText.textContent = `${abbreviations.length} abbreviations loaded.`;
-    return;
-  }
-
-  const filtered = abbreviations.filter(item => {
-    return headers.some(header => (item[header] || '').toLowerCase().includes(query));
+  phraseKeys.forEach(phrase => {
+    const regex = new RegExp(`\\b${escapeRegex(phrase)}\\b`, 'gi');
+    const matches = converted.match(regex);
+    if (matches) {
+      abbreviationsUsed += matches.length;
+      converted = converted.replace(regex, abbreviationMap[phrase]);
+    }
   });
 
-  renderResults(filtered);
-  updateSummary(filtered.length, searchInput.value.trim());
-  statusText.textContent = `Showing ${filtered.length} filtered results.`;
+  outputText.value = converted;
+  abbrCount.textContent = String(abbreviationsUsed);
 }
 
-function applyCsv(text, sourceLabel) {
-  const parsed = parseCsv(text);
-  if (!parsed.headers.length) {
-    statusText.textContent = 'The CSV file has no headers or is empty.';
-    resultsBody.innerHTML = '<tr><td colspan="2">Please use a valid CSV file.</td></tr>';
-    summaryText.textContent = 'No data loaded.';
-    return;
-  }
-
-  headers = parsed.headers;
-  abbreviations = parsed.rows;
-  renderTableHeader();
-  renderResults(abbreviations);
-  updateSummary(abbreviations.length);
-  statusText.textContent = `${abbreviations.length} rows loaded from ${sourceLabel}.`;
-}
-
-function loadCsvFromUrl(url) {
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
-      }
-      return response.text();
-    })
-    .then(text => applyCsv(text, 'default CSV'))
-    .catch(error => {
-      statusText.textContent = 'Failed to load default CSV: ' + error.message;
-      resultsBody.innerHTML = '<tr><td colspan="2">Unable to load the default CSV file.</td></tr>';
-      summaryText.textContent = 'Load a CSV file to begin.';
+function copyText() {
+  const text = outputText.value;
+  if (!text) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {
+      outputText.select();
+      document.execCommand('copy');
     });
+  } else {
+    outputText.select();
+    document.execCommand('copy');
+  }
 }
 
-function loadFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    applyCsv(reader.result, `file: ${file.name}`);
-  };
-  reader.onerror = () => {
-    statusText.textContent = 'Unable to read the selected CSV file.';
-  };
-  reader.readAsText(file, 'UTF-8');
+function clearAll() {
+  inputText.value = '';
+  outputText.value = '';
+  wordCount.textContent = '0';
+  abbrCount.textContent = '0';
 }
 
-fileInput.addEventListener('change', event => {
-  const file = event.target.files[0];
-  if (!file) return;
-  loadFile(file);
+function updateWordCount() {
+  wordCount.textContent = String(countWords(inputText.value));
+}
+
+convertBtn.addEventListener('click', convertText);
+copyBtn.addEventListener('click', copyText);
+clearBtn.addEventListener('click', clearAll);
+inputText.addEventListener('input', updateWordCount);
+
+window.addEventListener('load', () => {
+  fetch('data/abbreviations.csv')
+    .then(response => response.text())
+    .then(text => {
+      loadAbbreviations(text);
+      updateWordCount();
+    })
+    .catch(() => {
+      // Keep UI functional even if CSV fails to load.
+    });
 });
-
-searchInput.addEventListener('input', updateSearch);
-window.addEventListener('load', () => loadCsvFromUrl('data/abbreviations.csv'));

@@ -1,42 +1,27 @@
 # mil-abbr-bd
-A simple static military abbreviation converter that loads data from a CSV file and provides search functionality.
+A static text converter that uses a military abbreviation dictionary to convert normal writing into abbreviations.
 
 ## How it works
-- `index.html` is the webpage UI.
-- `styles.css` contains the visual styling.
-- `script.js` loads `data/abbreviations.csv` by default and also lets you upload your own CSV file.
-- `data/abbreviations.csv` contains example abbreviation / meaning pairs.
+- `index.html` provides the text conversion UI.
+- `styles.css` creates the same card layout and button styling as the reference page.
+- `script.js` loads `data/abbreviations.csv`, builds a phrase-to-abbreviation map, and converts input text.
+- `data/abbreviations.csv` is the full abbreviation list used by the converter.
 
-## CSV format
-Your CSV should use a header row. The default file uses:
-
-```csv
-abbreviation,meaning
-```
-
-You can also add extra columns such as `category` or `notes` and the table will display them automatically.
-
-Example:
-
-```csv
-abbreviation,meaning,category
-CO,Commanding Officer,Rank
-Bn,Battalion,Unit
-```
-
-## Use your own CSV
+## Use the converter
 1. Open `index.html` in a browser.
-2. Click the file chooser and select your own `.csv` file.
-3. Search by abbreviation or meaning.
+2. Paste or type your text in the "Input Text" box.
+3. Click `Convert Text`.
+4. The converted result appears in "Converted Output".
+5. Use `Copy Result` to copy the output or `Clear` to reset.
 
-## Run locally
-A local file upload works without a server, but if you want the default CSV to load automatically use a local server:
+## Local preview
+Run a local server to ensure the CSV loads correctly:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then visit:
+Then open:
 
 ```text
 http://localhost:8000

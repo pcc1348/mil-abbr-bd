@@ -7,44 +7,39 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="app-shell">
-    <header>
-      <div class="hero">
-        <h1>Mil Abbr Converter</h1>
-        <p>Search Bangladesh military abbreviations and meanings instantly. Upload your own CSV file to use a custom list.</p>
-      </div>
-    </header>
+  <div class="container">
+    <div class="header">
+      <h1>Abbreviation Converter</h1>
+      <p>Convert normal writing into military abbreviations according to JSSDM 2022.</p>
+    </div>
 
-    <section class="controls-panel">
-      <div class="control-row">
-        <label for="fileInput">Upload a CSV file</label>
-        <input id="fileInput" type="file" accept=".csv,text/csv" />
-      </div>
+    <div class="card">
+      <h2>Input Text</h2>
+      <br />
+      <textarea id="inputText" placeholder="Write your text here..."></textarea>
 
-      <div class="control-row">
-        <label for="searchInput">Search abbreviation or meaning</label>
-        <input id="searchInput" type="search" placeholder="Type abbreviation or meaning..." autocomplete="off" />
+      <div class="button-group">
+        <button class="convert-btn" id="convertBtn" type="button">Convert Text</button>
+        <button class="copy-btn" id="copyBtn" type="button">Copy Result</button>
+        <button class="clear-btn" id="clearBtn" type="button">Clear</button>
       </div>
 
-      <div id="statusText" class="status">Loading abbreviations...</div>
-    </section>
+      <div class="stats">
+        <div class="stat-box">Words: <span id="wordCount">0</span></div>
+        <div class="stat-box">Abbreviations Used: <span id="abbrCount">0</span></div>
+      </div>
+    </div>
 
-    <section class="results-panel">
-      <div class="summary-row">
-        <div id="summaryText">No data loaded yet.</div>
-      </div>
-      <div class="table-wrap">
-        <table aria-label="Abbreviation search results">
-          <thead>
-            <tr id="resultsHeader"></tr>
-          </thead>
-          <tbody id="resultsBody">
-            <tr><td colspan="2">Please wait while the CSV loads...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+    <div class="card">
+      <h2>Converted Output</h2>
+      <br />
+      <textarea id="outputText" readonly placeholder="Converted text will appear here..."></textarea>
+    </div>
+
+    <div class="footer">
+      Developed by Capt Abir, arty; 81 LC
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
