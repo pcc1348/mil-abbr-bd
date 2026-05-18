@@ -71,6 +71,11 @@ button{
     font-weight:bold;
 }
 
+button:disabled{
+    cursor:not-allowed;
+    opacity:0.5;
+}
+
 .convert-btn{
     background:#2563eb;
     color:white;
@@ -111,6 +116,16 @@ button{
     border-radius:8px;
     font-weight:bold;
     color:#0f172a;
+}
+
+.load-status{
+    margin-top:12px;
+    padding:12px 14px;
+    border-radius:10px;
+    background:#f8fafc;
+    color:#1f2937;
+    border:1px solid #cbd5e1;
+    font-size:14px;
 }
 
 .footer{

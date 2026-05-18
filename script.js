@@ -5,6 +5,7 @@ const abbrCount = document.getElementById('abbrCount');
 const convertBtn = document.getElementById('convertBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
+const loadStatus = document.getElementById('loadStatus');
 
 let abbreviationMap = {};
 let phraseKeys = [];
@@ -57,9 +58,8 @@ function parseCsv(text) {
   }).filter(row => row.abbreviation && row.meaning);
 }
 
-function loadAbbreviations(text) {
+function mergeAbbreviations(text) {
   const rows = parseCsv(text);
-  abbreviationMap = {};
   rows.forEach(row => {
     const key = row.abbreviation.trim().toLowerCase();
     if (key) {
@@ -122,19 +122,56 @@ function updateWordCount() {
   wordCount.textContent = String(countWords(inputText.value));
 }
 
+function updateLoadStatus(successCount, totalCount, loadedNames) {
+  if (successCount === 0) {
+    loadStatus.textContent = 'Failed to load abbreviation data. Check CSV files.';
+    loadStatus.style.background = '#fee2e2';
+    loadStatus.style.borderColor = '#fecaca';
+    convertBtn.disabled = true;
+    return;
+  }
+
+  const fileText = successCount === totalCount ? 'all files' : `${successCount} of ${totalCount} files`;
+  loadStatus.textContent = `Loaded ${fileText}: ${loadedNames.join(', ')}.`;
+  loadStatus.style.background = '#f8fafc';
+  loadStatus.style.borderColor = '#cbd5e1';
+  convertBtn.disabled = false;
+}
+
 convertBtn.addEventListener('click', convertText);
 copyBtn.addEventListener('click', copyText);
 clearBtn.addEventListener('click', clearAll);
 inputText.addEventListener('input', updateWordCount);
 
 window.addEventListener('load', () => {
-  fetch('data/abbreviations.csv')
-    .then(response => response.text())
-    .then(text => {
-      loadAbbreviations(text);
+  const files = [
+    { path: 'data/abbreviations_full.csv', name: 'full list' },
+    { path: 'data/abbreviations.csv', name: 'default list' },
+    { path: 'data/New Abbreviations.csv', name: 'new list' },
+  ];
+
+  let successCount = 0;
+  const loadedNames = [];
+
+  Promise.all(files.map(file => {
+    return fetch(file.path)
+      .then(response => {
+        if (!response.ok) {
+          return '';
+        }
+        return response.text().then(text => {
+          if (text.trim()) {
+            mergeAbbreviations(text);
+            successCount += 1;
+            loadedNames.push(file.name);
+          }
+          return text;
+        });
+      })
+      .catch(() => '');
+  }))
+    .then(() => {
+      updateLoadStatus(successCount, files.length, loadedNames);
       updateWordCount();
-    })
-    .catch(() => {
-      // Keep UI functional even if CSV fails to load.
     });
 });

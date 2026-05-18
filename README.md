@@ -4,8 +4,8 @@ A static text converter that uses a military abbreviation dictionary to convert 
 ## How it works
 - `index.html` provides the text conversion UI.
 - `styles.css` creates the same card layout and button styling as the reference page.
-- `script.js` loads `data/abbreviations.csv`, builds a phrase-to-abbreviation map, and converts input text.
-- `data/abbreviations.csv` is the full abbreviation list used by the converter.
+- `script.js` loads the abbreviation data files and builds a phrase-to-abbreviation map for conversion.
+- The app loads all available datasets in `data/`: `abbreviations_full.csv`, `abbreviations.csv`, and `New Abbreviations.csv`.
 
 ## Use the converter
 1. Open `index.html` in a browser.

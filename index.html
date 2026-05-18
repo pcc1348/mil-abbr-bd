@@ -11,6 +11,7 @@
     <div class="header">
       <h1>Abbreviation Converter</h1>
       <p>Convert normal writing into military abbreviations according to JSSDM 2022.</p>
+      <div id="loadStatus" class="load-status">Loading abbreviation data...</div>
     </div>
 
     <div class="card">
@@ -19,7 +20,7 @@
       <textarea id="inputText" placeholder="Write your text here..."></textarea>
 
       <div class="button-group">
-        <button class="convert-btn" id="convertBtn" type="button">Convert Text</button>
+        <button class="convert-btn" id="convertBtn" type="button" disabled>Convert Text</button>
         <button class="copy-btn" id="copyBtn" type="button">Copy Result</button>
         <button class="clear-btn" id="clearBtn" type="button">Clear</button>
       </div>
