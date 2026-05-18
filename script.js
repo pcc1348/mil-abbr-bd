@@ -5,7 +5,6 @@ const abbrCount = document.getElementById('abbrCount');
 const convertBtn = document.getElementById('convertBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
-const loadStatus = document.getElementById('loadStatus');
 
 let abbreviationMap = {};
 let phraseKeys = [];
@@ -122,19 +121,8 @@ function updateWordCount() {
   wordCount.textContent = String(countWords(inputText.value));
 }
 
-function updateLoadStatus(successCount, totalCount, loadedNames) {
-  if (successCount === 0) {
-    loadStatus.textContent = 'Failed to load abbreviation data. If you opened this file directly in the browser, run a local server or publish the site to enable CSV loading.';
-    loadStatus.style.borderColor = '#fecaca';
-    convertBtn.disabled = true;
-    return;
-  }
-
-  const fileText = successCount === totalCount ? 'all files' : `${successCount} of ${totalCount} files`;
-  loadStatus.textContent = `Loaded ${fileText}: ${loadedNames.join(', ')}.`;
-  loadStatus.style.background = '#f8fafc';
-  loadStatus.style.borderColor = '#cbd5e1';
-  convertBtn.disabled = false;
+function updateLoadStatus(successCount) {
+  convertBtn.disabled = successCount === 0;
 }
 
 convertBtn.addEventListener('click', convertText);

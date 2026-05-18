@@ -29,5 +29,29 @@ http://localhost:8000
 
 This ensures the CSV data files load correctly before publishing.
 
+## GitHub Pages publish
+1. Commit your final changes:
+
+```bash
+git add script.js README.md
+git commit -m "Update load status message and publish instructions"
+```
+
+2. Push to GitHub:
+
+```bash
+git push origin main
+```
+
+3. Open your repository on GitHub and go to `Settings` > `Pages`.
+4. Set the source to branch `main` and folder `/ (root)`, then save.
+5. Wait a few minutes and visit:
+
+```text
+https://pcc1348.github.io/mil-abbr-bd/
+```
+
+If the site does not display properly immediately, refresh after a minute.
+
 ## Deploy
-This is a static site, so you can deploy it with GitHub Pages, Netlify, or any static hosting provider.
+This is a static site, so you can also deploy it with Netlify or any static hosting provider.
