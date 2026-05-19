@@ -17,11 +17,12 @@ body{
 
 .header-image{
     width:100%;
-    max-width:820px;
+    max-width:760px;
     display:block;
     margin:0 auto 18px auto;
     border-radius:14px;
     box-shadow:0 4px 18px rgba(0,0,0,0.12);
+    height:auto;
 }
 
 .header{

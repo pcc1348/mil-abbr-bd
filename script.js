@@ -44,36 +44,24 @@ function parseCsv(text) {
   const lines = text.replace(/\r\n/g, '\n').split('\n').filter(line => line.trim().length > 0);
   if (!lines.length) return [];
 
-  const headerCells = parseCsvLine(lines[0]).map(cell => cell.trim().replace(/^"|"$/g, ''));
-  const abbreviationColumn = headerCells.findIndex(h => h.toLowerCase() === 'abbreviation');
-  const meaningColumn = headerCells.findIndex(h => h.toLowerCase() === 'meaning');
-
-  if (abbreviationColumn === -1 || meaningColumn === -1) {
-    return [];
-  }
-
   return lines.slice(1).map(line => {
     const cells = parseCsvLine(line).map(cell => cell.trim().replace(/^"|"$/g, ''));
-    const abbreviation = cells[abbreviationColumn] || '';
-    const meaning = cells[meaningColumn] || '';
-    return { abbreviation, meaning };
-  }).filter(row => row.abbreviation && row.meaning);
+    return {
+      full: cells[0] || '',
+      abbr: cells[1] || '',
+    };
+  }).filter(row => row.full && row.abbr);
 }
 
 function mergeAbbreviations(text) {
   const rows = parseCsv(text);
   rows.forEach(row => {
-    const abbreviation = row.abbreviation.trim();
-    const meaning = row.meaning.trim();
-    if (!abbreviation || !meaning) return;
+    const full = row.full.trim();
+    const abbr = row.abbr.trim();
+    if (!full || !abbr) return;
 
-    const abbrKey = abbreviation.toLowerCase();
-    const fullKey = meaning.toLowerCase();
-
-    abbrToFullMap[abbrKey] = meaning;
-    if (!(fullKey in fullToAbbrMap)) {
-      fullToAbbrMap[fullKey] = abbreviation;
-    }
+    fullToAbbrMap[full.toLowerCase()] = abbr;
+    abbrToFullMap[abbr.toLowerCase()] = full;
   });
   fullPhraseKeys = Object.keys(fullToAbbrMap).sort((a, b) => b.length - a.length);
   abbrPhraseKeys = Object.keys(abbrToFullMap).sort((a, b) => b.length - a.length);
