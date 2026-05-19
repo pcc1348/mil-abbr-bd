@@ -6,11 +6,15 @@ const convertToAbbrBtn = document.getElementById('convertToAbbrBtn');
 const convertToFullBtn = document.getElementById('convertToFullBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
+const disambiguationPanel = document.getElementById('disambiguationPanel');
+const ambiguityOptions = document.getElementById('ambiguityOptions');
+const applyChoicesBtn = document.getElementById('applyChoicesBtn');
 
 let fullToAbbrMap = {};
 let abbrToFullMap = {};
 let fullPhraseKeys = [];
 let abbrPhraseKeys = [];
+let pendingAmbiguousKeys = [];
 
 function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -61,7 +65,13 @@ function mergeAbbreviations(text) {
     if (!full || !abbr) return;
 
     fullToAbbrMap[full.toLowerCase()] = abbr;
-    abbrToFullMap[abbr.toLowerCase()] = full;
+    const abbrKey = abbr.toLowerCase();
+    if (!abbrToFullMap[abbrKey]) {
+      abbrToFullMap[abbrKey] = [];
+    }
+    if (!abbrToFullMap[abbrKey].includes(full)) {
+      abbrToFullMap[abbrKey].push(full);
+    }
   });
   fullPhraseKeys = Object.keys(fullToAbbrMap).sort((a, b) => b.length - a.length);
   abbrPhraseKeys = Object.keys(abbrToFullMap).sort((a, b) => b.length - a.length);
@@ -96,11 +106,75 @@ function applyConversion(keys, map) {
 }
 
 function convertToAbbreviation() {
+  hideDisambiguationPanel();
   applyConversion(fullPhraseKeys, fullToAbbrMap);
 }
 
 function convertToFullForm() {
-  applyConversion(abbrPhraseKeys, abbrToFullMap);
+  hideDisambiguationPanel();
+  const input = inputText.value;
+  if (!input.trim()) {
+    outputText.value = '';
+    abbrCount.textContent = '0';
+    return;
+  }
+
+  pendingAmbiguousKeys = abbrPhraseKeys.filter(key => {
+    if (abbrToFullMap[key].length <= 1) return false;
+    return new RegExp(`\\b${escapeRegex(key)}\\b`, 'gi').test(input);
+  });
+
+  if (pendingAmbiguousKeys.length) {
+    showDisambiguationPanel(pendingAmbiguousKeys);
+    return;
+  }
+
+  const singleMap = {};
+  abbrPhraseKeys.forEach(key => {
+    singleMap[key] = abbrToFullMap[key][0];
+  });
+  applyConversion(abbrPhraseKeys, singleMap);
+}
+
+function getAmbiguitySelectId(key) {
+  return `ambiguity-${key.replace(/[^a-z0-9_-]/gi, '_')}`;
+}
+
+function showDisambiguationPanel(keys) {
+  ambiguityOptions.innerHTML = keys.map(key => {
+    const options = abbrToFullMap[key].map(full => `<option value="${full}">${full}</option>`).join('');
+    const selectId = getAmbiguitySelectId(key);
+    return `
+      <div class="ambiguity-row">
+        <label for="${selectId}">Choose expansion for "${key.toUpperCase()}":</label>
+        <select id="${selectId}" data-key="${key}">
+          ${options}
+        </select>
+      </div>
+    `;
+  }).join('');
+  disambiguationPanel.classList.remove('hidden');
+}
+
+function hideDisambiguationPanel() {
+  disambiguationPanel.classList.add('hidden');
+  ambiguityOptions.innerHTML = '';
+  pendingAmbiguousKeys = [];
+}
+
+function applyDisambiguationChoicesAndConvert() {
+  const singleMap = {};
+  abbrPhraseKeys.forEach(key => {
+    if (abbrToFullMap[key].length === 1) {
+      singleMap[key] = abbrToFullMap[key][0];
+      return;
+    }
+    const select = document.querySelector(`#${getAmbiguitySelectId(key)}`);
+    singleMap[key] = select ? select.value : abbrToFullMap[key][0];
+  });
+
+  hideDisambiguationPanel();
+  applyConversion(abbrPhraseKeys, singleMap);
 }
 
 function copyText() {
@@ -122,6 +196,7 @@ function clearAll() {
   outputText.value = '';
   wordCount.textContent = '0';
   abbrCount.textContent = '0';
+  hideDisambiguationPanel();
 }
 
 function updateWordCount() {
@@ -134,8 +209,9 @@ function updateLoadStatus(successCount) {
   convertToFullBtn.disabled = disabled;
 }
 
-convertToAbbrBtn.addEventListener('click', convertToFullForm);
-convertToFullBtn.addEventListener('click', convertToAbbreviation);
+convertToAbbrBtn.addEventListener('click', convertToAbbreviation);
+convertToFullBtn.addEventListener('click', convertToFullForm);
+applyChoicesBtn.addEventListener('click', applyDisambiguationChoicesAndConvert);
 copyBtn.addEventListener('click', copyText);
 clearBtn.addEventListener('click', clearAll);
 inputText.addEventListener('input', updateWordCount);

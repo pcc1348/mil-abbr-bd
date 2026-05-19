@@ -12,8 +12,9 @@ A static text converter that uses a military abbreviation dictionary to convert 
 2. Paste or type your text in the "Input Text" box.
 3. Click `Convert to Abbreviation` to convert full-form text into military abbreviations.
 4. Click `Convert to Full-form` to convert abbreviations back into the full wording.
-5. The converted result appears in "Converted Output".
-6. Use `Copy Result` to copy the output or `Clear` to reset.
+5. If an abbreviation has multiple possible expansions, the app will prompt you to choose the correct one.
+6. The converted result appears in "Converted Output".
+7. Use `Copy Result` to copy the output or `Clear` to reset.
 
 ## Local preview
 Some browsers block `fetch()` for local files when you open `index.html` directly. To run the app correctly locally, use a simple local server:
