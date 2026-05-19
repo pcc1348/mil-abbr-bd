@@ -2,12 +2,15 @@ const inputText = document.getElementById('inputText');
 const outputText = document.getElementById('outputText');
 const wordCount = document.getElementById('wordCount');
 const abbrCount = document.getElementById('abbrCount');
-const convertBtn = document.getElementById('convertBtn');
+const convertToAbbrBtn = document.getElementById('convertToAbbrBtn');
+const convertToFullBtn = document.getElementById('convertToFullBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 
-let abbreviationMap = {};
-let phraseKeys = [];
+let fullToAbbrMap = {};
+let abbrToFullMap = {};
+let fullPhraseKeys = [];
+let abbrPhraseKeys = [];
 
 function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -60,19 +63,27 @@ function parseCsv(text) {
 function mergeAbbreviations(text) {
   const rows = parseCsv(text);
   rows.forEach(row => {
-    const key = row.abbreviation.trim().toLowerCase();
-    if (key) {
-      abbreviationMap[key] = row.meaning.trim();
+    const abbreviation = row.abbreviation.trim();
+    const meaning = row.meaning.trim();
+    if (!abbreviation || !meaning) return;
+
+    const abbrKey = abbreviation.toLowerCase();
+    const fullKey = meaning.toLowerCase();
+
+    abbrToFullMap[abbrKey] = meaning;
+    if (!(fullKey in fullToAbbrMap)) {
+      fullToAbbrMap[fullKey] = abbreviation;
     }
   });
-  phraseKeys = Object.keys(abbreviationMap).sort((a, b) => b.length - a.length);
+  fullPhraseKeys = Object.keys(fullToAbbrMap).sort((a, b) => b.length - a.length);
+  abbrPhraseKeys = Object.keys(abbrToFullMap).sort((a, b) => b.length - a.length);
 }
 
 function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function convertText() {
+function applyConversion(keys, map) {
   const input = inputText.value;
   if (!input.trim()) {
     outputText.value = '';
@@ -81,19 +92,27 @@ function convertText() {
   }
 
   let converted = input;
-  let abbreviationsUsed = 0;
+  let replacements = 0;
 
-  phraseKeys.forEach(phrase => {
+  keys.forEach(phrase => {
     const regex = new RegExp(`\\b${escapeRegex(phrase)}\\b`, 'gi');
     const matches = converted.match(regex);
     if (matches) {
-      abbreviationsUsed += matches.length;
-      converted = converted.replace(regex, abbreviationMap[phrase]);
+      replacements += matches.length;
+      converted = converted.replace(regex, map[phrase]);
     }
   });
 
   outputText.value = converted;
-  abbrCount.textContent = String(abbreviationsUsed);
+  abbrCount.textContent = String(replacements);
+}
+
+function convertToAbbreviation() {
+  applyConversion(fullPhraseKeys, fullToAbbrMap);
+}
+
+function convertToFullForm() {
+  applyConversion(abbrPhraseKeys, abbrToFullMap);
 }
 
 function copyText() {
@@ -122,10 +141,13 @@ function updateWordCount() {
 }
 
 function updateLoadStatus(successCount) {
-  convertBtn.disabled = successCount === 0;
+  const disabled = successCount === 0;
+  convertToAbbrBtn.disabled = disabled;
+  convertToFullBtn.disabled = disabled;
 }
 
-convertBtn.addEventListener('click', convertText);
+convertToAbbrBtn.addEventListener('click', convertToAbbreviation);
+convertToFullBtn.addEventListener('click', convertToFullForm);
 copyBtn.addEventListener('click', copyText);
 clearBtn.addEventListener('click', clearAll);
 inputText.addEventListener('input', updateWordCount);
@@ -138,7 +160,6 @@ window.addEventListener('load', () => {
   ];
 
   let successCount = 0;
-  const loadedNames = [];
 
   Promise.all(files.map(file => {
     return fetch(file.path)
@@ -150,7 +171,6 @@ window.addEventListener('load', () => {
           if (text.trim()) {
             mergeAbbreviations(text);
             successCount += 1;
-            loadedNames.push(file.name);
           }
           return text;
         });
@@ -158,7 +178,7 @@ window.addEventListener('load', () => {
       .catch(() => '');
   }))
     .then(() => {
-      updateLoadStatus(successCount, files.length, loadedNames);
+      updateLoadStatus(successCount);
       updateWordCount();
     });
 });
