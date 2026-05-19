@@ -110,6 +110,14 @@ function convertToAbbreviation() {
   applyConversion(fullPhraseKeys, fullToAbbrMap);
 }
 
+function findAmbiguousAbbreviations(input) {
+  const lowerInput = input.toLowerCase();
+  return abbrPhraseKeys.filter(key => {
+    if (abbrToFullMap[key].length <= 1) return false;
+    return new RegExp(`\b${escapeRegex(key)}\b`, 'gi').test(lowerInput);
+  });
+}
+
 function convertToFullForm() {
   hideDisambiguationPanel();
   const input = inputText.value;
@@ -119,10 +127,7 @@ function convertToFullForm() {
     return;
   }
 
-  pendingAmbiguousKeys = abbrPhraseKeys.filter(key => {
-    if (abbrToFullMap[key].length <= 1) return false;
-    return new RegExp(`\\b${escapeRegex(key)}\\b`, 'gi').test(input);
-  });
+  pendingAmbiguousKeys = findAmbiguousAbbreviations(input);
 
   if (pendingAmbiguousKeys.length) {
     showDisambiguationPanel(pendingAmbiguousKeys);
