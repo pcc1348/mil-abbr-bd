@@ -146,8 +146,8 @@ function updateLoadStatus(successCount) {
   convertToFullBtn.disabled = disabled;
 }
 
-convertToAbbrBtn.addEventListener('click', convertToAbbreviation);
-convertToFullBtn.addEventListener('click', convertToFullForm);
+convertToAbbrBtn.addEventListener('click', convertToFullForm);
+convertToFullBtn.addEventListener('click', convertToAbbreviation);
 copyBtn.addEventListener('click', copyText);
 clearBtn.addEventListener('click', clearAll);
 inputText.addEventListener('input', updateWordCount);
